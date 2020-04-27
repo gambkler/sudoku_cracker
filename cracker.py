@@ -18,6 +18,8 @@ class Cracker:
                   [[(j, i) for j in range(9)] for i in range(9)]
     boxes_index = [[(m+i, n+j) for i in range(3) for j in range(3)] for m in range(0, 8, 3) for n in range(0, 8, 3)]
     numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+    cracker_count = 0
+    filled_count = 0
 
     def init_board(self, filename=None):
         if filename is None:
@@ -79,6 +81,13 @@ class Cracker:
                 box_num = (row//3)*3 + col//3 + 1
                 self.units.append(Unit(row, col, box_num, self.board[row][col]))
     
+    def crack(self):
+        self.cracker_count = 0
+        self.filled_count = 0
+        self.unit_scanner()
+        print('crack loop {} time(s)'.format(self.cracker_count))
+        print('filled {} unit(s)'.format(self.filled_count))
+
     def unit_scanner(self):
         hit_count = 0
         for unit in self.units:
@@ -96,7 +105,9 @@ class Cracker:
                 self.line_sets[row_name].add(unit.value)
                 self.line_sets[col_name].add(unit.value)
                 self.box_sets[box_name].add(unit.value)
+                unit.candidate = set()
                 hit_count += 1
+                self.filled_count += 1
             else:
                 if unit.candidate and not result.issubset(unit.candidate):
                     raise Exception('{}, {}'.format(unit, result))
@@ -111,6 +122,7 @@ class Cracker:
             else:
                 print('complete')
         else:
+            self.cracker_count += 1
             self.unit_scanner()
 
     def print_board(self):
@@ -125,5 +137,5 @@ class Cracker:
 b = Cracker()
 b.load_board()
 b.update_detail()
-b.unit_scanner()
+b.crack()
 b.print_board()
