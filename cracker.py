@@ -1,4 +1,6 @@
 import json
+import copy
+import collections
 
 class Unit:
     def __init__(self, row, column, box, value):
@@ -76,19 +78,50 @@ class Cracker:
 
     def update_unit_detail(self):
         self.units = []
+        self.lines = collections.defaultdict(list)
+        self.boxes = collections.defaultdict(list)
         for row in range(9):
             for col in range(9):
                 box_num = (row//3)*3 + col//3 + 1
-                self.units.append(Unit(row, col, box_num, self.board[row][col]))
+                unit = Unit(row, col, box_num, self.board[row][col])
+                self.units.append(unit)
+                self.lines['R{}'.format(row)].append(unit)
+                self.lines['C{}'.format(col)].append(unit)
+                self.boxes['B{}'.format(box_num)].append(unit)
     
     def crack(self):
         self.cracker_count = 0
         self.filled_count = 0
-        self.unit_scanner()
+        self.scanner()
         print('crack loop {} time(s)'.format(self.cracker_count))
         print('filled {} unit(s)'.format(self.filled_count))
 
-    def unit_scanner(self):
+    def scanner(self):
+        while True:
+            hit_count = 0
+            while True:
+                count = self.exclusion()
+                if not count:
+                    break
+                hit_count += count
+            while True:
+                count = self.single()
+                if not count:
+                    break
+                hit_count += count
+            self.cracker_count += 1
+            if hit_count == 0:
+                zero_count = 0
+                for unit in self.units:
+                    if not unit.value:
+                        zero_count += 1
+                if zero_count:
+                    print('has {} zero'.format(zero_count))
+                else:
+                    print('complete')
+                break
+
+    def exclusion(self):
         hit_count = 0
         for unit in self.units:
             if unit.value:
@@ -108,22 +141,71 @@ class Cracker:
                 unit.candidate = set()
                 hit_count += 1
                 self.filled_count += 1
+                self.board[unit.row][unit.column] = unit.value
             else:
                 if unit.candidate and not result.issubset(unit.candidate):
                     raise Exception('{}, {}'.format(unit, result))
                 unit.candidate = result
-        if hit_count == 0:
-            zero_count = 0
-            for unit in self.units:
-                if not unit.value:
-                    zero_count += 1
-            if zero_count:
-                print('has {} zero'.format(zero_count))
-            else:
-                print('complete')
-        else:
-            self.cracker_count += 1
-            self.unit_scanner()
+            if not unit.value and not unit.candidate:
+                # raise Exception('here')
+                pass
+        return hit_count
+
+    def single(self):
+        hit_count = 0
+        for key, units in self.lines.items():
+            for unit in units:
+                if unit.value:
+                    continue
+                row_name = 'R{}'.format(unit.row)
+                col_name = 'C{}'.format(unit.column)
+                box_name = 'B{}'.format(unit.box)
+                diff = copy.deepcopy(unit.candidate)
+                for u in units:
+                    if u != unit:
+                        if u.value and u.value in diff:
+                            diff.remove(u.value)
+                if len(diff) != 1:
+                    for u in units:
+                        if u != unit and not u.value:
+                            diff.difference_update(u.candidate)
+                if len(diff) == 1:
+                    unit.value = diff.pop()
+                    self.line_sets[row_name].add(unit.value)
+                    self.line_sets[col_name].add(unit.value)
+                    self.box_sets[box_name].add(unit.value)
+                    unit.candidate = set()
+                    hit_count += 1
+                    self.filled_count += 1
+                    self.board[unit.row][unit.column] = unit.value
+        
+        for key, units in self.boxes.items():
+            for unit in units:
+                if unit.value:
+                    continue
+                row_name = 'R{}'.format(unit.row)
+                col_name = 'C{}'.format(unit.column)
+                box_name = 'B{}'.format(unit.box)
+                diff = copy.deepcopy(unit.candidate)
+                for u in units:
+                    if u != unit:
+                        if u.value and u.value in diff:
+                            diff.remove(u.value)
+                if len(diff) != 1:
+                    for u in units:
+                        if u != unit and not u.value:
+                            diff.difference_update(u.candidate)
+                if len(diff) == 1:
+                    unit.value = diff.pop()
+                    self.line_sets[row_name].add(unit.value)
+                    self.line_sets[col_name].add(unit.value)
+                    self.box_sets[box_name].add(unit.value)
+                    unit.candidate = set()
+                    hit_count += 1
+                    self.filled_count += 1
+                    self.board[unit.row][unit.column] = unit.value
+        
+        return hit_count
 
     def print_board(self):
         count = 0
@@ -135,6 +217,7 @@ class Cracker:
 
 
 b = Cracker()
+# b.load_board(input('board_file_name: '))
 b.load_board()
 b.update_detail()
 b.crack()
