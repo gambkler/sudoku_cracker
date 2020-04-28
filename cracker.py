@@ -142,6 +142,8 @@ class Cracker:
                 hit_count += 1
                 self.filled_count += 1
                 self.board[unit.row][unit.column] = unit.value
+                print('set {} {} as {}'.format(unit.row, unit.column, unit.value))
+                print(self.board)
             else:
                 if unit.candidate and not result.issubset(unit.candidate):
                     raise Exception('{}, {}'.format(unit, result))
@@ -178,6 +180,8 @@ class Cracker:
                     hit_count += 1
                     self.filled_count += 1
                     self.board[unit.row][unit.column] = unit.value
+                    print('set {} {} as {}'.format(unit.row, unit.column, unit.value))
+                    print(self.board)
         
         for key, units in self.boxes.items():
             for unit in units:
@@ -204,6 +208,8 @@ class Cracker:
                     hit_count += 1
                     self.filled_count += 1
                     self.board[unit.row][unit.column] = unit.value
+                    print('set {} {} as {}'.format(unit.row, unit.column, unit.value))
+                    print(self.board)
         
         return hit_count
 
@@ -215,10 +221,10 @@ class Cracker:
             if count % 9 == 0:
                 print('')
 
-
-b = Cracker()
-# b.load_board(input('board_file_name: '))
-b.load_board()
-b.update_detail()
-b.crack()
-b.print_board()
+if __name__ == "__main__":
+    b = Cracker()
+    # b.load_board(input('board_file_name: '))
+    b.load_board()
+    b.update_detail()
+    b.crack()
+    b.print_board()
