@@ -57,14 +57,20 @@ class Cracker:
         for i in range(9):
             row_name = 'R{}'.format(i)
             row_set = set(self.board[i])
-            row_set.remove(0)
+            try:
+                row_set.remove(0)
+            except KeyError:
+                pass
             self.line_sets[row_name] = row_set
 
             col_name = 'C{}'.format(i)
             col_set = set()
             for j in range(9):
                 col_set.add(self.board[j][i])
-            col_set.remove(0)
+            try:
+                col_set.remove(0)
+            except KeyError:
+                pass
             self.line_sets[col_name] = col_set
     
     def update_box_detail(self):
@@ -73,7 +79,10 @@ class Cracker:
             box_set = set()
             for index in box:
                 box_set.add(self.board[index[0]][index[1]])
-            box_set.remove(0)
+            try:
+                box_set.remove(0)
+            except KeyError:
+                pass
             self.box_sets['B{}'.format(num+1)] = box_set
 
     def update_unit_detail(self):
@@ -143,14 +152,13 @@ class Cracker:
                 self.filled_count += 1
                 self.board[unit.row][unit.column] = unit.value
                 print('set {} {} as {}'.format(unit.row, unit.column, unit.value))
-                print(self.board)
+                # self.print_board()
             else:
                 if unit.candidate and not result.issubset(unit.candidate):
                     raise Exception('{}, {}'.format(unit, result))
                 unit.candidate = result
             if not unit.value and not unit.candidate:
-                # raise Exception('here')
-                pass
+                raise Exception('{}'.format(unit))
         return hit_count
 
     def single(self):
@@ -181,7 +189,7 @@ class Cracker:
                     self.filled_count += 1
                     self.board[unit.row][unit.column] = unit.value
                     print('set {} {} as {}'.format(unit.row, unit.column, unit.value))
-                    print(self.board)
+                    # self.print_board()
         
         for key, units in self.boxes.items():
             for unit in units:
@@ -209,7 +217,7 @@ class Cracker:
                     self.filled_count += 1
                     self.board[unit.row][unit.column] = unit.value
                     print('set {} {} as {}'.format(unit.row, unit.column, unit.value))
-                    print(self.board)
+                    # self.print_board()
         
         return hit_count
 
